@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulli-Routen — Übersichtskarte</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'DM Sans', system-ui, sans-serif; background: #FAFAF8; }
+
+  .page { display: flex; flex-direction: column; height: 100vh; max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #E0DED6;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-size: 19px;
+    font-weight: 600;
+    color: #1A1A18;
+    line-height: 1.2;
+  }
+  .header-left p {
+    font-size: 12px;
+    color: #6B6A65;
+    margin-top: 2px;
+  }
+
+  /* Toggle buttons */
+  .toggle-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .toggle-btn {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #E0DED6;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #F1EFE8;
+    color: #5F5E5A;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active-r1 { background: #E1F5EE; border-color: #0F6E56; color: #0F6E56; }
+  .toggle-btn.active-r2 { background: #E6F1FB; border-color: #185FA5; color: #185FA5; }
+  .toggle-btn.active-both { background: #EEEDFE; border-color: #534AB7; color: #534AB7; }
+
+  /* Map */
+  #map { flex: 1; min-height: 0; }
+
+  /* Legend */
+  .legend {
+    background: #fff;
+    padding: 10px 16px;
+    border-top: 1px solid #E0DED6;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 11px;
+    color: #6B6A65;
+  }
+  .leg-item { display: flex; align-items: center; gap: 6px; }
+  .leg-line { width: 24px; height: 3px; border-radius: 2px; }
+  .leg-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Popup styling */
+  .leaflet-popup-content-wrapper {
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+  .leaflet-popup-content { margin: 0 !important; }
+  .popup-inner { padding: 12px 14px; min-width: 200px; max-width: 240px; }
+  .popup-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .popup-title { font-size: 14px; font-weight: 600; color: #1A1A18; margin-bottom: 4px; line-height: 1.3; }
+  .popup-day { font-size: 11px; color: #6B6A65; margin-bottom: 6px; }
+  .popup-tour { font-size: 11px; color: #1A1A18; line-height: 1.5; border-top: 1px solid #E0DED6; padding-top: 6px; margin-top: 4px; }
+  .popup-tour span { color: #6B6A65; }
+  .popup-sp { font-size: 11px; color: #6B6A65; margin-top: 4px; }
+
+  /* Custom icons */
+  .map-marker {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 2.5px solid rgba(255,255,255,0.9);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    font-size: 13px;
+  }
+  .map-marker-inner { transform: rotate(45deg); font-size: 14px; line-height: 1; }
+  .marker-home {
+    background: #1A1A18 !important;
+    border-radius: 50% !important;
+    transform: none !important;
+    width: 14px !important; height: 14px !important;
+    border: 3px solid white !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>🚐 Bulli-Reisekarten</h1>
+      <p>Beide Rundreisen ab Berlin — Stationen, Routen, Aktivitäten</p>
+    </div>
+    <div class="toggle-group">
+      <button class="toggle-btn" id="btn-r1" onclick="showRoute('r1')">Route 1 · Nordschleife</button>
+      <button class="toggle-btn" id="btn-r2" onclick="showRoute('r2')">Route 2 · Südreise</button>
+      <button class="toggle-btn active-both" id="btn-both" onclick="showRoute('both')">Beide anzeigen</button>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="leg-item">
+      <div class="leg-line" style="background:#0F6E56"></div>
+      <span>Route 1 — Nordschleife (7 Tage)</span>
+    </div>
+    <div class="leg-item">
+      <div class="leg-line" style="background:#185FA5"></div>
+      <span>Route 2 — Südreise (10 Tage)</span>
+    </div>
+    <div class="leg-item">
+      <div class="leg-dot" style="background:#0F6E56"></div>
+      <span>🚴 Radtour-Station (E-Bike 50–90 km)</span>
+    </div>
+    <div class="leg-item">
+      <div class="leg-dot" style="background:#BA7517"></div>
+      <span>🥾 Wander-Station</span>
+    </div>
+    <div class="leg-item">
+      <div class="leg-dot" style="background:#1A1A18"></div>
+      <span>Berlin (Start / Ziel)</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── MAP INIT ──────────────────────────────────────────
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 18
+}).addTo(map);
+
+// ── COLOUR HELPERS ────────────────────────────────────
+const C1 = '#0F6E56';  // Route 1 green
+const C2 = '#185FA5';  // Route 2 blue
+const CWAND = '#BA7517'; // amber – hiking
+const CRAD  = '#0F6E56'; // green – cycling (R1)
+const CRAD2 = '#185FA5'; // blue  – cycling (R2)
+const CHOME = '#1A1A18';
+
+function markerIcon(color, emoji, size = 30) {
+  return L.divIcon({
+    className: '',
+    iconAnchor: [size/2, size],
+    popupAnchor: [0, -size],
+    html: `<div style="
+      width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+      background:${color};border:2.5px solid rgba(255,255,255,0.95);
+      box-shadow:0 2px 8px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;">
+      <span style="transform:rotate(45deg);font-size:${Math.round(size*0.45)}px;line-height:1;">${emoji}</span>
+    </div>`
+  });
+}
+
+function homeIcon() {
+  return L.divIcon({
+    className: '',
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -12],
+    html: `<div style="width:18px;height:18px;border-radius:50%;background:#1A1A18;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`
+  });
+}
+
+function popup(badgeColor, badgeText, title, day, tourType, tourName, tourKm, tourH, stellplatz, preis) {
+  const badgeBg = badgeColor + '22';
+  return `<div class="popup-inner">
+    <div class="popup-badge" style="background:${badgeBg};color:${badgeColor}">${badgeText}</div>
+    <div class="popup-title">${title}</div>
+    <div class="popup-day">${day}</div>
+    <div class="popup-tour">
+      <strong>${tourName}</strong><br>
+      <span>${tourType} · ${tourKm} · ${tourH}</span>
+    </div>
+    <div class="popup-sp">📍 ${stellplatz} · ${preis}</div>
+  </div>`;
+}
+
+// ── BERLIN (shared) ───────────────────────────────────
+const berlin = { lat: 52.52, lng: 13.405 };
+
+// ══════════════════════════════════════════════════════
+// ROUTE 1 — NORDSCHLEIFE
+// ══════════════════════════════════════════════════════
+const r1_coords = [
+  [52.52,   13.405],   // Berlin
+  [51.941,  13.891],   // Lübben Spreewald
+  [50.918,  14.153],   // Bad Schandau Sächs. Schweiz
+  [50.503,  12.520],   // Zwischenpunkt Thüringen (Richtungskorrektur)
+  [50.708,  10.725],   // Oberhof Thüringer Wald
+  [51.868,  10.685],   // Ilsenburg Harz
+  [51.988,  13.068],   // Jüterbog Fläming
+  [52.52,   13.405],   // Berlin zurück
+];
+
+const r1_stops = [
+  {
+    lat: 51.941, lng: 13.891,
+    color: CRAD, emoji: '🚴',
+    html: popup(CRAD,'Route 1 · Tag 1','Spreewald · Lübben','Tag 1 — ab Berlin (~90 km Fahrt)','🚴 E-Bike','Spreewald Große Runde: Lübben – Burg – Lehde – Lübbenau','~78 km','3–4 h','Parkplatz Am Burglehn, Lübben','kostenlos')
+  },
+  {
+    lat: 50.918, lng: 14.153,
+    color: CWAND, emoji: '🥾',
+    html: popup(CWAND,'Route 1 · Tag 2–3','Sächsische Schweiz · Bad Schandau','Tag 2–3 — Anreise ~200 km','🥾 Wanderung','Malerweg Etappe 2: Bastei – Hohnstein','10,9 km','~4,75 h','Hafen Prossen / Stellplatz Goldgruben','8–10 €/Nacht')
+  },
+  {
+    lat: 50.708, lng: 10.725,
+    color: CRAD, emoji: '🚴',
+    html: popup(CRAD,'Route 1 · Tag 4','Thüringer Wald · Oberhof','Tag 4 — Anreise ~200 km','🚴 E-Bike','Rennsteig-Große-Runde: Oberhof – Schmücke – Beerberg – Oberhof','~65 km','3,5–4 h','Wohnmobilpark Oberhof','~15 €/Nacht')
+  },
+  {
+    lat: 51.868, lng: 10.685,
+    color: CWAND, emoji: '🥾',
+    html: popup(CWAND,'Route 1 · Tag 5–6','Harz · Ilsenburg / Schierke','Tag 5–6 — Anreise ~150 km','🥾 Wanderung','Brocken Eckerlochstieg / Heinrich-Heine-Weg','10–21 km','4–7 h','Stellplatz Im Sandtal, Ilsenburg','~12 €/Nacht')
+  },
+  {
+    lat: 51.988, lng: 13.068,
+    color: CRAD, emoji: '🚴',
+    html: popup(CRAD,'Route 1 · Tag 7','Fläming · Jüterbog','Tag 7 — Rückreisetag','🚴 E-Bike','Fläming-Skate RK 1+4: Jüterbog – Kloster Zinna – Dennewitz','~75 km','3–4 h','Wohnmobilstellplatz Jüterbog','kostenlos')
+  },
+];
+
+// ══════════════════════════════════════════════════════
+// ROUTE 2 — SÜDREISE
+// ══════════════════════════════════════════════════════
+const r2_coords = [
+  [52.52,   13.405],   // Berlin
+  [51.736,  11.010],   // Thale / Bodetal
+  [50.966,  10.306],   // Eisenach / Wartburg
+  [50.700,  10.720],   // Oberhof (Schwarzatal-Gebiet)
+  [49.070,  13.102],   // Bodenmais Bayerischer Wald
+  [48.760,  13.460],   // Spiegelau Nationalpark
+  [48.891,  11.185],   // Eichstätt Altmühltal
+  [48.917,  11.869],   // Kelheim Donaudurchbruch
+  [49.458,  11.076],   // Nürnberg
+  [52.52,   13.405],   // Berlin zurück
+];
+
+const r2_stops = [
+  {
+    lat: 51.736, lng: 11.010,
+    color: CWAND, emoji: '🥾',
+    html: popup(C2,'Route 2 · Tag 1–2','Harz · Thale / Bodetal','Tag 1–2 — Anreise ~200 km','🥾 Wanderung + 🚴 Selketal-Rad','Bodetal-Runde + Selketal-Radweg nach Quedlinburg','15,5 km / 35 km','4–5 h / 2,5–3,5 h','Womopark24 Thale (mit HATIX-Bus)','~12–15 €/Nacht')
+  },
+  {
+    lat: 50.966, lng: 10.306,
+    color: CWAND, emoji: '🥾',
+    html: popup(C2,'Route 2 · Tag 3–4','Thüringer Wald · Eisenach','Tag 3–4 — Anreise ~130 km','🥾 Wanderung','Drachenschlucht & Wartburg-Runde / Panoramaweg Schwarzatal','12–14 km','3,5–4,5 h','Campingpark Eisenach / Naturcamp Meyersgrund','~14–18 €/Nacht')
+  },
+  {
+    lat: 49.070, lng: 13.102,
+    color: CWAND, emoji: '🥾',
+    html: popup(C2,'Route 2 · Tag 5','Bayerischer Wald · Arber','Tag 5 — Anreise ~260 km','🥾 Wanderung','Panoramaweg: Großer Arbersee – Arber-Gipfel 1.456 m','~12 km','4–5 h','Concorde Stellplatz Bodenmais','~12–15 €/Nacht')
+  },
+  {
+    lat: 48.760, lng: 13.460,
+    color: CWAND, emoji: '🥾',
+    html: popup(C2,'Route 2 · Tag 6','Bayerischer Wald · Lusen','Tag 6 — kurze Fahrt ~45 km','🥾 Wanderung','Lusen-Tour: Fredenbrücke – Himmelsleiter – Gipfel 1.373 m','~13 km','4–5,5 h','Campingplatz am Nationalpark, Spiegelau','~14–18 €/Nacht')
+  },
+  {
+    lat: 48.891, lng: 11.185,
+    color: CRAD2, emoji: '🚴',
+    html: popup(C2,'Route 2 · Tag 7–8','Altmühltal · Eichstätt / Kelheim','Tag 7–8 — Anreise ~120 km','🚴 E-Bike','Altmühltal-Radweg: Eichstätt – Pappenheim – Solnhofen – Beilngries','~65 km','3,5–4 h','Wohnmobil-/Zeltplatz Eichstätt / Stellplatz Kelheim','~10–16 €/Nacht')
+  },
+  {
+    lat: 48.917, lng: 11.869,
+    color: CWAND, emoji: '🥾',
+    html: popup(C2,'Route 2 · Tag 7','Altmühltal · Kelheim / Weltenburg','Erweiterung Tag 7','🥾 Wanderung','Kloster Weltenburg & Donaudurchbruch ab Kelheim','~8–10 km','3–4 h','Wohnmobilstellplatz Am Pflegerspitz, Kelheim','~10–14 €/Nacht')
+  },
+  {
+    lat: 49.458, lng: 11.076,
+    color: CRAD2, emoji: '🚴',
+    html: popup(C2,'Route 2 · Tag 9','Nürnberg · Franken','Tag 9 — Anreise ~90 km','🚴 E-Bike','Pegnitz-Radweg durch Stadtwald zur Kaiserburg','~35 km','2–3 h','Campingpark Nürnberg','~18–22 €/Nacht')
+  },
+];
+
+// ── RENDER LAYERS ─────────────────────────────────────
+let layers = { r1: [], r2: [], home: [] };
+
+// Berlin markers
+function addBerlin() {
+  const m = L.marker([berlin.lat, berlin.lng], { icon: homeIcon() })
+    .bindPopup(`<div class="popup-inner"><div class="popup-title">🏠 Berlin</div><div class="popup-day">Start & Ziel beider Routen</div></div>`);
+  layers.home.push(m);
+}
+addBerlin();
+
+// Route 1
+const poly1 = L.polyline(r1_coords, { color: C1, weight: 3, opacity: 0.75, dashArray: '8 5' });
+layers.r1.push(poly1);
+
+r1_stops.forEach(s => {
+  const m = L.marker([s.lat, s.lng], { icon: markerIcon(s.color, s.emoji) })
+    .bindPopup(s.html, { maxWidth: 260 });
+  layers.r1.push(m);
+});
+
+// Route 2
+const poly2 = L.polyline(r2_coords, { color: C2, weight: 3, opacity: 0.75, dashArray: '8 5' });
+layers.r2.push(poly2);
+
+r2_stops.forEach(s => {
+  const m = L.marker([s.lat, s.lng], { icon: markerIcon(s.color, s.emoji, 30) })
+    .bindPopup(s.html, { maxWidth: 260 });
+  layers.r2.push(m);
+});
+
+// ── SHOW / HIDE ROUTES ────────────────────────────────
+function clearAll() {
+  [...layers.r1, ...layers.r2, ...layers.home].forEach(l => {
+    try { map.removeLayer(l); } catch(e) {}
+  });
+}
+
+function showRoute(mode) {
+  clearAll();
+  document.getElementById('btn-r1').className   = 'toggle-btn' + (mode === 'r1'   ? ' active-r1'   : '');
+  document.getElementById('btn-r2').className   = 'toggle-btn' + (mode === 'r2'   ? ' active-r2'   : '');
+  document.getElementById('btn-both').className = 'toggle-btn' + (mode === 'both' ? ' active-both'  : '');
+
+  if (mode === 'r1' || mode === 'both') layers.r1.forEach(l => l.addTo(map));
+  if (mode === 'r2' || mode === 'both') layers.r2.forEach(l => l.addTo(map));
+  layers.home.forEach(l => l.addTo(map));
+
+  // Fit bounds
+  let allCoords = [[berlin.lat, berlin.lng]];
+  if (mode === 'r1' || mode === 'both') allCoords = allCoords.concat(r1_coords);
+  if (mode === 'r2' || mode === 'both') allCoords = allCoords.concat(r2_coords);
+  map.fitBounds(L.latLngBounds(allCoords).pad(0.08));
+}
+
+// Init: show both
+showRoute('both');
+</script>
+</body>
+</html>

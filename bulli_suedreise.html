@@ -4,274 +4,186 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bulli-Südreise — Reiseplan</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
-
   :root {
-    --green:   #0F6E56;
-    --green-l: #E1F5EE;
-    --amber:   #854F0B;
-    --amber-l: #FFF3E0;
-    --coral:   #993C1D;
-    --coral-l: #FAECE7;
-    --blue:    #185FA5;
-    --blue-l:  #E6F1FB;
-    --purple:  #534AB7;
-    --purple-l:#EEEDFE;
-    --teal:    #0F6E56;
-    --teal-l:  #E1F5EE;
-    --pink:    #72243E;
-    --pink-l:  #FBEAF0;
-    --gray:    #5F5E5A;
-    --gray-l:  #F1EFE8;
-    --border:  #E0DED6;
-    --text:    #1A1A18;
-    --muted:   #6B6A65;
-    --bg:      #FAFAF8;
-    --white:   #FFFFFF;
+    --green:#0F6E56;--green-l:#E1F5EE;--amber:#854F0B;--amber-l:#FFF3E0;
+    --coral:#993C1D;--coral-l:#FAECE7;--blue:#185FA5;--blue-l:#E6F1FB;
+    --purple:#534AB7;--purple-l:#EEEDFE;--gray:#5F5E5A;--gray-l:#F1EFE8;
+    --border:#E0DED6;--text:#1A1A18;--muted:#6B6A65;--bg:#FAFAF8;--white:#FFF;
   }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.6;padding:32px 24px;max-width:980px;margin:0 auto;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* ── HEADER ── */
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--border);gap:16px;flex-wrap:wrap;}
+  .header-left h1{font-family:'DM Serif Display',Georgia,serif;font-size:30px;font-weight:400;letter-spacing:-0.5px;line-height:1.2;}
+  .header-left .subtitle{font-size:13px;color:var(--muted);margin-top:6px;}
+  .stat-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{text-align:center;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:9px 13px;min-width:68px;}
+  .stat-val{font-size:17px;font-weight:600;display:block;}
+  .stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
 
-  body {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
-    line-height: 1.6;
-    padding: 32px 24px;
-    max-width: 960px;
-    margin: 0 auto;
-  }
+  /* ── ROUTE BAR ── */
+  .route-bar{display:flex;align-items:center;margin-bottom:20px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;overflow-x:auto;gap:0;}
+  .route-stop{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;}
+  .route-dot{width:11px;height:11px;border-radius:50%;border:2px solid currentColor;flex-shrink:0;}
+  .route-dot.home{background:var(--text);border-color:var(--text);}
+  .route-label{font-size:10px;font-weight:500;color:var(--muted);text-align:center;max-width:60px;line-height:1.3;}
+  .route-km{font-size:9px;color:var(--muted);}
+  .route-arrow{display:flex;align-items:center;padding:0 3px;padding-bottom:16px;flex-shrink:0;color:var(--border);font-size:16px;}
 
-  .header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--border);
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .header-left h1 {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 30px;
-    font-weight: 400;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-  }
-  .header-left .subtitle {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-  .stat-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .stat {
-    text-align: center;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 9px 13px;
-    min-width: 68px;
-  }
-  .stat-val { font-size: 17px; font-weight: 600; color: var(--text); display: block; }
-  .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  /* ── NOTE BANNERS ── */
+  .note-banner{background:var(--blue-l);border:1px solid #B5D4F4;border-radius:10px;padding:10px 14px;font-size:11px;color:var(--blue);margin-bottom:16px;line-height:1.7;}
+  .note-banner strong{color:var(--blue);}
+  .ebike-banner{background:#E6F1FB;border:1px solid #B5D4F4;border-radius:10px;padding:10px 14px;font-size:11px;color:#0C447C;margin-bottom:16px;line-height:1.7;}
+  .ebike-banner strong{color:#0C447C;}
 
-  /* ROUTE BAR */
-  .route-bar {
-    display: flex;
-    align-items: center;
-    margin-bottom: 24px;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-    overflow-x: auto;
-    gap: 0;
-  }
-  .route-stop { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
-  .route-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid currentColor; flex-shrink: 0; }
-  .route-dot.home { background: var(--text); border-color: var(--text); }
-  .route-label { font-size: 10px; font-weight: 500; color: var(--muted); text-align: center; max-width: 58px; line-height: 1.3; }
-  .route-km-label { font-size: 9px; color: var(--muted); }
-  .route-arrow { display: flex; align-items: center; padding: 0 3px; padding-bottom: 16px; flex-shrink: 0; color: var(--border); font-size: 16px; }
+  /* ── DAY CARDS ── */
+  .day-card{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+  .day-header{display:grid;grid-template-columns:68px 1fr auto;align-items:center;gap:14px;padding:13px 16px;}
+  .day-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;width:56px;height:56px;border-radius:11px;flex-shrink:0;}
+  .day-num{font-size:20px;font-weight:600;line-height:1;}
+  .day-word{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:500;opacity:.7;}
+  .day-title h3{font-size:14px;font-weight:600;margin-bottom:3px;}
+  .drive-info{font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;}
+  .drive-chip{display:inline-flex;background:var(--gray-l);padding:2px 7px;border-radius:5px;font-size:10px;color:var(--gray);font-weight:500;}
+  .day-pills{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+  .pill{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap;}
 
-  /* DAY CARDS */
-  .day-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-  .day-header {
-    display: grid;
-    grid-template-columns: 68px 1fr auto;
-    align-items: center;
-    gap: 14px;
-    padding: 13px 16px;
-  }
-  .day-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 11px;
-    flex-shrink: 0;
-  }
-  .day-num { font-size: 20px; font-weight: 600; line-height: 1; }
-  .day-word { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; opacity: 0.7; }
-  .day-title h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-  .day-title .drive-info { font-size: 11px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
-  .drive-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gray-l); padding: 2px 7px; border-radius: 5px; font-size: 10px; color: var(--gray); font-weight: 500; }
-  .day-pills { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-  .pill { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 500; white-space: nowrap; }
+  .day-body{border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr;}
+  .section{padding:12px 16px;border-right:1px solid var(--border);}
+  .section:last-child{border-right:none;}
+  .section-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;color:var(--muted);margin-bottom:7px;}
+  .tour-name{font-weight:600;font-size:12px;margin-bottom:4px;}
+  .tour-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;}
+  .mc{background:var(--gray-l);color:var(--gray);font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;}
+  .mc.hard{background:var(--coral-l);color:var(--coral);}
+  .mc.mid{background:var(--amber-l);color:var(--amber);}
+  .mc.easy{background:var(--green-l);color:var(--green);}
+  .mc.ebike{background:#E6F1FB;color:#0C447C;}
+  .hi{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px;font-size:11px;color:var(--muted);}
+  .hi::before{content:'›';flex-shrink:0;opacity:.4;font-size:12px;line-height:1.4;}
+  .sp-name{font-weight:600;font-size:12px;margin-bottom:3px;}
+  .sp-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:5px;}
+  .ptag{display:inline-flex;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;}
+  .pfree{background:var(--green-l);color:var(--green);}
+  .pcheap{background:var(--amber-l);color:var(--amber);}
+  .ppaid{background:var(--coral-l);color:var(--coral);}
+  .rt{font-size:11px;color:var(--muted);line-height:1.8;}
+  .rt strong{color:var(--text);}
 
-  /* DAY BODY */
-  .day-body { border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; }
-  .section { padding: 12px 16px; border-right: 1px solid var(--border); }
-  .section:last-child { border-right: none; }
-  .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; color: var(--muted); margin-bottom: 7px; }
-  .tour-name { font-weight: 600; font-size: 12px; color: var(--text); margin-bottom: 4px; }
-  .tour-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px; }
-  .meta-chip { background: var(--gray-l); color: var(--gray); font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 4px; }
-  .meta-chip.hard   { background: var(--coral-l); color: var(--coral); }
-  .meta-chip.medium { background: var(--amber-l); color: var(--amber); }
-  .meta-chip.easy   { background: var(--green-l); color: var(--green); }
-  .highlight-item { display: flex; align-items: flex-start; gap: 5px; margin-bottom: 3px; font-size: 11px; color: var(--muted); }
-  .highlight-item::before { content: '›'; flex-shrink: 0; opacity: 0.4; font-size: 12px; line-height: 1.4; }
-  .stellplatz-name { font-weight: 600; font-size: 12px; color: var(--text); margin-bottom: 4px; }
-  .stellplatz-desc { font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 5px; }
-  .price-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 5px; font-size: 11px; font-weight: 600; }
-  .price-free   { background: var(--green-l); color: var(--green); }
-  .price-cheap  { background: var(--amber-l); color: var(--amber); }
-  .price-paid   { background: var(--coral-l); color: var(--coral); }
+  /* Day badge colours */
+  .d1 .day-badge{background:var(--amber-l);color:var(--amber);}
+  .d2 .day-badge{background:var(--amber-l);color:var(--amber);}
+  .d3 .day-badge{background:var(--green-l);color:var(--green);}
+  .d4 .day-badge{background:var(--green-l);color:var(--green);}
+  .d5 .day-badge{background:var(--coral-l);color:var(--coral);}
+  .d6 .day-badge{background:var(--coral-l);color:var(--coral);}
+  .d7 .day-badge{background:var(--blue-l);color:var(--blue);}
+  .d8 .day-badge{background:var(--blue-l);color:var(--blue);}
+  .d9 .day-badge{background:var(--purple-l);color:var(--purple);}
+  .d10 .day-badge{background:var(--gray-l);color:var(--gray);}
+  .d11 .day-badge{background:var(--gray-l);color:var(--gray);}
 
-  /* ROUTE ROUTE TEXT */
-  .route-text { font-size: 11px; color: var(--muted); line-height: 1.8; }
-  .route-text strong { color: var(--text); }
+  /* Route dot colours */
+  .d1 .route-dot{color:var(--amber);background:var(--amber-l);}
+  .d3 .route-dot{color:var(--green);background:var(--green-l);}
+  .d5 .route-dot{color:var(--coral);background:var(--coral-l);}
+  .d7 .route-dot{color:var(--blue);background:var(--blue-l);}
+  .d9 .route-dot{color:var(--purple);background:var(--purple-l);}
+  .d10 .route-dot{color:var(--gray);background:var(--gray-l);}
 
-  /* DAY COLORS */
-  .d1 .day-badge, .d1-dot { background: var(--amber-l); color: var(--amber); }
-  .d2 .day-badge, .d2-dot { background: var(--amber-l); color: var(--amber); }
-  .d3 .day-badge, .d3-dot { background: var(--green-l); color: var(--green); }
-  .d4 .day-badge, .d4-dot { background: var(--green-l); color: var(--green); }
-  .d5 .day-badge, .d5-dot { background: var(--coral-l); color: var(--coral); }
-  .d6 .day-badge, .d6-dot { background: var(--coral-l); color: var(--coral); }
-  .d7 .day-badge, .d7-dot { background: var(--blue-l); color: var(--blue); }
-  .d8 .day-badge, .d8-dot { background: var(--blue-l); color: var(--blue); }
-  .d9 .day-badge, .d9-dot { background: var(--purple-l); color: var(--purple); }
-  .d10 .day-badge, .d10-dot { background: var(--gray-l); color: var(--gray); }
+  /* ── MAP SECTION ── */
+  .map-section{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+  .map-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .map-header h2{font-size:15px;font-weight:600;}
+  .map-header p{font-size:11px;color:var(--muted);}
+  #route-map{height:420px;width:100%;}
+  .map-legend{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);}
+  .leg{display:flex;align-items:center;gap:5px;}
+  .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .leg-line{width:22px;height:3px;border-radius:2px;}
 
-  .d1  .route-dot { color: var(--amber);  background: var(--amber-l); }
-  .d3  .route-dot { color: var(--green);  background: var(--green-l); }
-  .d5  .route-dot { color: var(--coral);  background: var(--coral-l); }
-  .d7  .route-dot { color: var(--blue);   background: var(--blue-l); }
-  .d9  .route-dot { color: var(--purple); background: var(--purple-l); }
+  /* ── FOOTER ── */
+  .footer{margin-top:20px;padding-top:18px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .fbox{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:13px 15px;}
+  .fbox h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:9px;}
+  .fr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .fr:last-child{border-bottom:none;}
+  .fr .l{color:var(--muted);}
+  .fr .v{font-weight:600;}
+  .tip{display:flex;align-items:flex-start;gap:7px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.5;}
+  .tip:last-child{border-bottom:none;}
+  .ti{flex-shrink:0;font-size:13px;}
+  .tt{color:var(--muted);}
+  .tt strong{color:var(--text);}
 
-  /* FOOTER */
-  .footer { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .footer-box { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; }
-  .footer-box h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-bottom: 9px; }
-  .footer-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-  .footer-row:last-child { border-bottom: none; }
-  .footer-row .label { color: var(--muted); }
-  .footer-row .value { font-weight: 600; color: var(--text); }
-  .tip-item { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; line-height: 1.5; }
-  .tip-item:last-child { border-bottom: none; }
-  .tip-icon { flex-shrink: 0; font-size: 13px; }
-  .tip-text { color: var(--muted); }
-  .tip-text strong { color: var(--text); }
+  /* ── LEAFLET POPUP ── */
+  .leaflet-popup-content-wrapper{border-radius:10px!important;box-shadow:0 4px 20px rgba(0,0,0,.12)!important;padding:0!important;overflow:hidden;}
+  .leaflet-popup-content{margin:0!important;}
+  .pop{padding:11px 13px;min-width:190px;max-width:230px;}
+  .pop-badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+  .pop-title{font-size:13px;font-weight:600;color:#1A1A18;margin-bottom:3px;line-height:1.3;}
+  .pop-day{font-size:11px;color:#6B6A65;margin-bottom:5px;}
+  .pop-tour{font-size:11px;color:#1A1A18;line-height:1.5;border-top:1px solid #E0DED6;padding-top:5px;margin-top:3px;}
+  .pop-tour span{color:#6B6A65;}
+  .pop-sp{font-size:11px;color:#6B6A65;margin-top:3px;}
 
-  /* NOTE BANNER */
-  .note-banner { background: var(--blue-l); border: 1px solid #B5D4F4; border-radius: 10px; padding: 10px 14px; font-size: 11px; color: var(--blue); margin-bottom: 20px; line-height: 1.6; }
-  .note-banner strong { color: var(--blue); font-weight: 600; }
-
-  @media print {
-    body { padding: 12px; background: white; }
-    .day-card { break-inside: avoid; }
-  }
+  @media print{body{padding:12px;background:white;}.day-card{break-inside:avoid;}.map-section{break-inside:avoid;}}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ═══════════════════════════════════════════ HEADER -->
 <div class="header">
   <div class="header-left">
-    <h1>🚐 Bulli-Südreise</h1>
-    <div class="subtitle">10 Tage · Berlin → Harz → Thüringer Wald → Bayerischer Wald → Altmühltal → Berlin</div>
+    <h1>🚐 Bulli-Südreise ⚡</h1>
+    <div class="subtitle">11 Tage · Berlin → Harz → Thüringer Wald → Bayerischer Wald → Altmühltal → Ingolstadt → Berlin</div>
   </div>
   <div class="stat-row">
-    <div class="stat"><span class="stat-val">10</span><span class="stat-lbl">Tage</span></div>
-    <div class="stat"><span class="stat-val">~1.750</span><span class="stat-lbl">km Fahrt</span></div>
-    <div class="stat"><span class="stat-val">~90 €</span><span class="stat-lbl">Stellpl. ges.</span></div>
-    <div class="stat"><span class="stat-val">4🚴 6🥾</span><span class="stat-lbl">Touren</span></div>
+    <div class="stat"><span class="stat-val">11</span><span class="stat-lbl">Tage</span></div>
+    <div class="stat"><span class="stat-val">~1.790</span><span class="stat-lbl">km Fahrt</span></div>
+    <div class="stat"><span class="stat-val">~290</span><span class="stat-lbl">km E-Bike</span></div>
+    <div class="stat"><span class="stat-val">~100 €</span><span class="stat-lbl">Stellpl. ges.</span></div>
   </div>
 </div>
 
-<!-- ROUTENWAHL-HINWEIS -->
+<!-- ═══════════════════════════════════════════ HINWEISE -->
 <div class="note-banner">
-  <strong>Routenoptimierung:</strong> Statt Magdeburg → direkt in das landschaftlich schönere <strong>Harz-Bodetal</strong> (Thale). Statt Ingolstadt → <strong>Kelheim/Eichstätt</strong> als Altmühltal-Tor mit deutlich mehr Naturcharakter. Der Bayerische Wald bekommt 2 Tage mit je einem anderen Gipfel: Großer Arber &amp; Lusen.
+  <strong>Routenoptimierung:</strong> Reihenfolge nach kürzester Gesamtstrecke optimiert. Ingolstadt ist die letzte Übernachtungsstation vor der Heimfahrt (→ Berlin ~480 km via A9). Statt Nürnberg dient Ingolstadt als sinnvoller, zentraler Abschluss — von dort ist die A9 direkt erreichbar. Der Altmühltal-Abschnitt endet natürlich bei Kelheim/Eichstätt, und Ingolstadt liegt nur ~40 km weiter östlich.
+</div>
+<div class="ebike-banner">
+  <strong>⚡ E-Bike:</strong> Alle Radtouren auf 50–90 km ausgelegt. Akku (500–620 Wh) reicht bei moderater Unterstützung. Ladestopp in Café/Restaurant bei Touren über 70 km einplanen.
 </div>
 
-<!-- ROUTE BAR -->
+<!-- ═══════════════════════════════════════════ ROUTE BAR -->
 <div class="route-bar">
-  <div class="route-stop">
-    <div class="route-dot home"></div>
-    <div class="route-label" style="font-weight:600;color:var(--text)">Berlin</div>
-    <div class="route-km-label">Start</div>
-  </div>
+  <div class="route-stop"><div class="route-dot home"></div><div class="route-label" style="font-weight:600;color:var(--text)">Berlin</div><div class="route-km">Start</div></div>
   <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">200km</span>→</div>
-  <div class="route-stop d1">
-    <div class="route-dot"></div>
-    <div class="route-label">Harz / Bodetal</div>
-    <div class="route-km-label">T1–2</div>
-  </div>
+  <div class="route-stop d1"><div class="route-dot"></div><div class="route-label">Harz / Thale</div><div class="route-km">T1–2</div></div>
   <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">130km</span>→</div>
-  <div class="route-stop d3">
-    <div class="route-dot"></div>
-    <div class="route-label">Thür. Wald</div>
-    <div class="route-km-label">T3–4</div>
-  </div>
+  <div class="route-stop d3"><div class="route-dot"></div><div class="route-label">Thür. Wald</div><div class="route-km">T3–4</div></div>
   <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">260km</span>→</div>
-  <div class="route-stop d5">
-    <div class="route-dot"></div>
-    <div class="route-label">Bayer. Wald</div>
-    <div class="route-km-label">T5–6</div>
-  </div>
+  <div class="route-stop d5"><div class="route-dot"></div><div class="route-label">Bayer. Wald</div><div class="route-km">T5–6</div></div>
   <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">120km</span>→</div>
-  <div class="route-stop d7">
-    <div class="route-dot"></div>
-    <div class="route-label">Altmühltal</div>
-    <div class="route-km-label">T7–8</div>
-  </div>
-  <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">100km</span>→</div>
-  <div class="route-stop d9">
-    <div class="route-dot"></div>
-    <div class="route-label">Nürnberg / Franken</div>
-    <div class="route-km-label">T9</div>
-  </div>
-  <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">440km</span>→</div>
-  <div class="route-stop">
-    <div class="route-dot home"></div>
-    <div class="route-label" style="font-weight:600;color:var(--text)">Berlin</div>
-    <div class="route-km-label">T10</div>
-  </div>
+  <div class="route-stop d7"><div class="route-dot"></div><div class="route-label">Altmühltal</div><div class="route-km">T7–8</div></div>
+  <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">40km</span>→</div>
+  <div class="route-stop d10"><div class="route-dot"></div><div class="route-label">Ingolstadt</div><div class="route-km">T9–10</div></div>
+  <div class="route-arrow">→<span style="font-size:9px;color:var(--muted);margin-left:2px">480km</span>→</div>
+  <div class="route-stop"><div class="route-dot home"></div><div class="route-label" style="font-weight:600;color:var(--text)">Berlin</div><div class="route-km">T11</div></div>
 </div>
 
-
-<!-- ══════════════ TAG 1 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 1 -->
 <div class="day-card d1">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">1</span><span class="day-word">Tag</span></div>
     <div class="day-title">
       <h3>Harz — Bodetal & Hexentanzplatz, Thale</h3>
       <div class="drive-info">
-        <span class="drive-chip">🚗 Berlin → Thale/Bodetal</span>
+        <span class="drive-chip">🚗 Berlin → Thale</span>
         <span class="drive-chip">~200 km · ~2 h</span>
         <span class="drive-chip">Ankunft mittags → direkt starten</span>
       </div>
@@ -284,99 +196,88 @@
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Bodetal-Runde: Hexentanzplatz – Treseburg – Bodetal</div>
+      <div class="tour-name">Bodetal-Runde: Hexentanzplatz – Treseburg – Bodeschlucht</div>
       <div class="tour-meta">
-        <span class="meta-chip">🥾 ~15,5 km</span>
-        <span class="meta-chip">~270 Hm</span>
-        <span class="meta-chip">4–5 h</span>
-        <span class="meta-chip medium">Mittel</span>
+        <span class="mc">🥾 ~15,5 km</span><span class="mc">~270 Hm</span><span class="mc">4–5 h</span><span class="mc mid">Mittel</span>
       </div>
-      <div class="highlight-item">Hexentanzplatz (454 m) — einer der schönsten Aussichtspunkte Deutschlands</div>
-      <div class="highlight-item">Blick zur Rosstrappe über die Bodeschlucht — „Grand Canyon Deutschlands"</div>
-      <div class="highlight-item">Weißer Hirsch: Aussichtspunkt 150 m über dem Bodetal</div>
-      <div class="highlight-item">Wanderung entlang der rauschenden Bode, hohe Granitfelsen</div>
-      <div class="highlight-item">Teufelsbrücke, Jungfernbrücke, Sonnenklippe</div>
+      <div class="hi">Hexentanzplatz (454 m) — spektakulärster Aussichtspunkt Harz</div>
+      <div class="hi">Bodeschlucht — „Grand Canyon Deutschlands", Granitfelsen</div>
+      <div class="hi">Rosstrappe: gegenüberliegender Fels mit Hufabdruck-Sage</div>
+      <div class="hi">Teufelsbrücke, Jungfernbrücke, Weißer Hirsch-Aussicht</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
+      <div class="rt">
         Start: <strong>Talstation Seilbahn Thale</strong><br>
-        → Aufstieg (oder Seilbahn, 5 €) zum <strong>Hexentanzplatz</strong><br>
+        → Aufstieg (oder Seilbahn 5 €) zum <strong>Hexentanzplatz</strong><br>
         → Walpurgishalle & Tierpark<br>
         → Wanderweg nach Treseburg<br>
-        → Weißer Hirsch-Aussichtspunkt<br>
-        → Abstieg ins Bodetal<br>
-        → Teufelsbrücke → an der Bode zurück<br>
-        → Jungfernbrücke → Kleine Waldkater<br>
-        Ziel: <strong>Thale Talstation</strong>
+        → Weißer Hirsch-Aussicht<br>
+        → Abstieg Bodetal, Teufelsbrücke<br>
+        → Jungfernbrücke → Bode zurück<br>
+        Ziel: <strong>Talstation Thale</strong>
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Womopark24 Thale</div>
-      <div class="stellplatz-desc">Am Silberbach, Thale · industriell-kreativ gestaltet · WLAN gratis · WC/Dusche · alle Zahlungsmittel · Bus nach Quedlinburg/Wernigerode inklusive · ⭐ sehr beliebt in der Community · HATIX-Busticket inklusive</div>
-      <span class="price-tag price-cheap">~12–15 € / Nacht</span>
+      <div class="sp-name">Womopark24 Thale</div>
+      <div class="sp-desc">Am Silberbach, Thale · kreativ gestaltet auf altem Industriegelände · WLAN gratis · alle Zahlungsmittel · HATIX-Bus-Ticket inklusive (→ Quedlinburg, Wernigerode kostenlos!)</div>
+      <span class="ptag pcheap">~12–15 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 2 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 2 -->
 <div class="day-card d2">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">2</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Harz — Ruhetag & Quedlinburg / Selketal-Radtour</h3>
+      <h3>Harz — Ruhetag & Selketal E-Bike + Quedlinburg</h3>
       <div class="drive-info">
         <span class="drive-chip">📍 Kein Fahrtag</span>
-        <span class="drive-chip">Wahlweise: Quedlinburg-Bummel oder Selketal-Radweg</span>
+        <span class="drive-chip">HATIX-Bus nach Quedlinburg kostenlos!</span>
       </div>
     </div>
     <div class="day-pills">
-      <span class="pill" style="background:var(--green-l);color:var(--green)">🚴 Radtour</span>
+      <span class="pill" style="background:#E6F1FB;color:#0C447C">⚡ E-Bike</span>
       <span class="pill" style="background:var(--gray-l);color:var(--gray)">⭐ Leicht</span>
     </div>
   </div>
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Selketal-Radweg: Thale – Gernrode – Quedlinburg</div>
+      <div class="tour-name">Selketal-Radweg: Thale – Gernrode – Quedlinburg – Thale</div>
       <div class="tour-meta">
-        <span class="meta-chip">🚴 ~35 km</span>
-        <span class="meta-chip">~150 Hm</span>
-        <span class="meta-chip">2,5–3,5 h</span>
-        <span class="meta-chip easy">Leicht</span>
+        <span class="mc ebike">⚡ ~65 km</span><span class="mc">~200 Hm</span><span class="mc">3–4 h</span><span class="mc easy">Leicht</span>
       </div>
-      <div class="highlight-item">Stiftskirche Quedlinburg — UNESCO-Welterbe auf dem Schlossberg</div>
-      <div class="highlight-item">Gernrode: romanische Stiftskirche St. Cyriakus (~960 n. Chr.)</div>
-      <div class="highlight-item">Selketal: wildromantisches Nebental des Harzes</div>
-      <div class="highlight-item">Harzer Schmalspurbahn oft parallel sichtbar</div>
-      <div class="highlight-item">Alternativ: Nur Quedlinburg zu Fuß erkunden (2–3 h)</div>
+      <div class="hi">Quedlinburg: Stiftskirche auf dem Schlossberg — UNESCO-Welterbe</div>
+      <div class="hi">Gernrode: romanische Stiftskirche St. Cyriakus (~960 n. Chr.)</div>
+      <div class="hi">Wildromantisches Selketal, Harzer Schmalspurbahn sichtbar</div>
+      <div class="hi">Fachwerkstädte, mittelalterliche Gassen, Kaffeepause Quedlinburg</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
-        Start: <strong>Thale</strong> (mit Bus oder Rad nach Gernrode)<br>
-        → Stiftskirche Gernrode<br>
-        → Selketal-Radweg flussaufwärts<br>
-        → Mägdesprung (Hüttenwerk)<br>
-        → weiter nach <strong>Quedlinburg</strong><br>
-        → <strong>Schlossberg mit Stiftskirche</strong><br>
-        → Altstadt mit Fachwerkhäusern<br>
-        Rück: Bus (HATIX inkl.) oder Rad zurück
+      <div class="rt">
+        Start: <strong>Thale Stellplatz</strong><br>
+        → Selketal-Radweg Richtung Gernrode<br>
+        → <strong>Stiftskirche Gernrode</strong><br>
+        → Mägdesprung → Meisdorf<br>
+        → <strong>Quedlinburg</strong> (Schlossberg, Altstadt)<br>
+        → Radweg parallel zur Bahn zurück<br>
+        → Rückkehr via <strong>Thale</strong><br>
+        <span style="opacity:.6">Variante: Rückfahrt mit Bus (HATIX)</span>
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Womopark24 Thale (2. Nacht)</div>
-      <div class="stellplatz-desc">Selber Platz · mit HATIX-Kurtaxeticket sind Bus-Fahrten nach Quedlinburg und Wernigerode kostenlos enthalten — ideal für diesen Ruhetag!</div>
-      <span class="price-tag price-cheap">~12–15 € / Nacht</span>
+      <div class="sp-name">Womopark24 Thale (2. Nacht)</div>
+      <div class="sp-desc">Selber Platz. Das HATIX-Kurtaxeticket ist ein echter Bonus — Tagesausflug mit Bus kostenlos, ideal für diesen Ruhetag.</div>
+      <span class="ptag pcheap">~12–15 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 3 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 3 -->
 <div class="day-card d3">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">3</span><span class="day-word">Tag</span></div>
@@ -398,25 +299,20 @@
       <div class="section-title">Tour</div>
       <div class="tour-name">Drachenschlucht & Wartburg-Runde ab Eisenach</div>
       <div class="tour-meta">
-        <span class="meta-chip">🥾 ~12 km</span>
-        <span class="meta-chip">~380 Hm</span>
-        <span class="meta-chip">3,5–4,5 h</span>
-        <span class="meta-chip medium">Mittel</span>
+        <span class="mc">🥾 ~12 km</span><span class="mc">~380 Hm</span><span class="mc">3,5–4,5 h</span><span class="mc mid">Mittel</span>
       </div>
-      <div class="highlight-item">Drachenschlucht — engste Klamm Thüringens, Stege über rauschenden Bach</div>
-      <div class="highlight-item">Landgrafenschlucht als ergänzende Parallelschlucht</div>
-      <div class="highlight-item">Wartburg (UNESCO) — über der Schlucht thronend</div>
-      <div class="highlight-item">Aussicht Hohe Sonne über Eisenach und Thüringer Wald</div>
-      <div class="highlight-item">⭐ Beliebteste Tour im Naturpark Thüringer Wald (AllTrails)</div>
+      <div class="hi">Drachenschlucht — engste Klamm Thüringens, Stege über Bachbett</div>
+      <div class="hi">Wartburg (UNESCO-Welterbe) — Luther übersetzte hier die Bibel</div>
+      <div class="hi">Landgrafenschlucht als Parallelklamm, Hohe Sonne Aussicht</div>
+      <div class="hi">⭐ Beliebteste Wanderung im gesamten Naturpark Thüringer Wald</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
+      <div class="rt">
         Start: <strong>Parkplatz Hohe Sonne</strong> (südl. Eisenach)<br>
         → Einstieg <strong>Drachenschlucht</strong><br>
-        → Stege durch die Klamm<br>
-        → Feengrotte → Rauschbach<br>
-        → <strong>Wartburg</strong> (Besichtigung opt., ~10 €)<br>
+        → Stege durch die Klamm, Feengrotte<br>
+        → <strong>Wartburg</strong> (opt. Besichtigung ~10 €)<br>
         → Landgrafenschlucht zurück<br>
         → Wartburgblick-Aussicht<br>
         Ziel: <strong>Parkplatz Hohe Sonne</strong>
@@ -424,79 +320,72 @@
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Campingpark Eisenach</div>
-      <div class="stellplatz-desc">Wolfsgasse 10, Eisenach · ADAC-Klassifikation · direkt in der Stadt · Strom, WC/Dusche, Ver-/Entsorgung · Innenstadt zu Fuß erreichbar · gut bewertet · ganzjährig geöffnet</div>
-      <span class="price-tag price-cheap">~14–18 € / Nacht</span>
+      <div class="sp-name">Campingpark Eisenach</div>
+      <div class="sp-desc">Wolfsgasse 10, Eisenach · ADAC-Klassifikation · Vollausstattung · Innenstadt fußläufig · direkt in der Stadt · ganzjährig geöffnet · gut bewertet</div>
+      <span class="ptag pcheap">~14–18 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 4 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 4 -->
 <div class="day-card d4">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">4</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Thüringer Wald — Ruhetag & Schwarzatal / Rennsteig</h3>
+      <h3>Thüringer Wald — Ruhetag & Rennsteig E-Bike</h3>
       <div class="drive-info">
-        <span class="drive-chip">📍 Kein Fahrtag</span>
-        <span class="drive-chip">Bulli weiterfahren nach Schwarzatal-Gebiet (optional: Sitzendorf, ~40 km)</span>
+        <span class="drive-chip">📍 Kurze Fahrt optional: Eisenach → Oberhof (~60 km)</span>
       </div>
     </div>
     <div class="day-pills">
-      <span class="pill" style="background:var(--green-l);color:var(--green)">🥾 Wanderung</span>
+      <span class="pill" style="background:#E6F1FB;color:#0C447C">⚡ E-Bike</span>
       <span class="pill" style="background:var(--gray-l);color:var(--gray)">⭐⭐ Mittel</span>
     </div>
   </div>
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Panoramaweg Schwarzatal: Sitzendorf – Oberweißbach</div>
+      <div class="tour-name">Rennsteig-Radweg Große Runde: Oberhof – Beerberg – Schmücke – Oberhof</div>
       <div class="tour-meta">
-        <span class="meta-chip">🥾 ~14 km</span>
-        <span class="meta-chip">~380 Hm</span>
-        <span class="meta-chip">3,5–4,5 h</span>
-        <span class="meta-chip medium">Mittel</span>
+        <span class="mc ebike">⚡ ~65 km</span><span class="mc">~650 Hm</span><span class="mc">3,5–4,5 h</span><span class="mc mid">Mittel</span>
       </div>
-      <div class="highlight-item">Schwarzatal — eines der schönsten Gebirgstäler Thüringens</div>
-      <div class="highlight-item">Fröbelturm mit Panoramablick auf Rennsteig und Thüringer Wald</div>
-      <div class="highlight-item">Schloss Schwarzburg thront über dem Schwarzatal</div>
-      <div class="highlight-item">Oberweißbacher Bergbahn (steilste Standseilbahn der Welt, 25%)</div>
-      <div class="highlight-item">Geburtsort Friedrich Fröbels — Erfinder des Kindergartens</div>
+      <div class="hi">Rennsteigkamm: Deutschlands ältester Höhenwanderweg als Radroute</div>
+      <div class="hi">Großer Beerberg (982 m) — höchste Erhebung Thüringens</div>
+      <div class="hi">Rennsteiggarten: Botanischer Garten mit Gebirgsflora, Oberhof</div>
+      <div class="hi">Weite Ausblicke über Thüringens grünes Herz in alle Richtungen</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
-        Start: <strong>Sitzendorf</strong> an der Schwarza<br>
-        → <strong>Schloss Schwarzburg</strong> (Aussicht)<br>
-        → Panoramaweg Schwarzatal<br>
-        → Griesbachfelsen → Barigauer Turm<br>
-        → <strong>Oberweißbach</strong><br>
-        → optional: Fahrt mit Bergbahn<br>
-        → <strong>Fröbelturm</strong> (Aussicht!)<br>
-        → zurück nach Sitzendorf
+      <div class="rt">
+        Start: <strong>Oberhof Zentrum</strong><br>
+        → Rennsteig-Radweg Markierung grünes „R"<br>
+        → Saukopfmoor → Bärenstein<br>
+        → <strong>Großer Beerberg</strong> (982 m)<br>
+        → Schmücke (Hütten-Einkehr!)<br>
+        → <strong>Rennsteiggarten</strong><br>
+        → Grenzadler → zurück Oberhof<br>
+        <span style="opacity:.6">Asphalt + Waldweg, Trekking/MTB ideal</span>
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Naturcamp Meyersgrund, Oberhof</div>
-      <div class="stellplatz-desc">Meyersgrund, Oberhof · ADAC-gelistet · mitten im Wald · ruhige Naturlage · Strom, WC/Dusche · Ausgangspunkt Rennsteig · direkt am Waldrand · familienfreundlich</div>
-      <span class="price-tag price-cheap">~15–18 € / Nacht</span>
+      <div class="sp-name">Naturcamp Meyersgrund, Oberhof</div>
+      <div class="sp-desc">Meyersgrund, Oberhof · ADAC-gelistet · mitten im Wald · Strom, WC/Dusche · ruhige Naturlage · direkt am Waldrand · idealer Ausgangspunkt Rennsteig</div>
+      <span class="ptag pcheap">~15–18 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 5 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 5 -->
 <div class="day-card d5">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">5</span><span class="day-word">Tag</span></div>
     <div class="day-title">
       <h3>Bayerischer Wald — Großer Arber (1.456 m)</h3>
       <div class="drive-info">
-        <span class="drive-chip">🚗 Thüringer Wald → Bayerwald</span>
+        <span class="drive-chip">🚗 Thüringer Wald → Bodenmais</span>
         <span class="drive-chip">~260 km · ~2,5–3 h</span>
-        <span class="drive-chip">Ankunft mittags → Panoramaweg Arber</span>
+        <span class="drive-chip">Ankunft mittags → Arber-Panoramaweg</span>
       </div>
     </div>
     <div class="day-pills">
@@ -507,28 +396,23 @@
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Panoramaweg: Großer Arbersee – Arber-Gipfel (Runde)</div>
+      <div class="tour-name">Arber-Panoramaweg: Großer Arbersee – Gipfel (Runde)</div>
       <div class="tour-meta">
-        <span class="meta-chip">🥾 ~12 km</span>
-        <span class="meta-chip">~550 Hm</span>
-        <span class="meta-chip">4–5 h</span>
-        <span class="meta-chip medium">Mittel</span>
+        <span class="mc">🥾 ~12 km</span><span class="mc">~550 Hm</span><span class="mc">4–5 h</span><span class="mc mid">Mittel</span>
       </div>
-      <div class="highlight-item">Großer Arbersee — mystischer Moorsee, 12 ha Fläche</div>
-      <div class="highlight-item">Arber-Gipfel 1.456 m — höchster Berg des Böhmerwaldes</div>
-      <div class="highlight-item">Arberschutzhaus auf 1.380 m — Einkehr mit Blick nach Tschechien</div>
-      <div class="highlight-item">Fünf markante Felsriegel auf dem Gipfelplateau (Bärenriegel, Seeriegel)</div>
-      <div class="highlight-item">Gondelbahn als Alternativ-Abstieg vorhanden</div>
+      <div class="hi">Großer Arbersee — mystischer Moorsee, 12 ha, Ausblick auf Böhmerwald</div>
+      <div class="hi">Arber-Gipfel 1.456 m — höchster Berg des Böhmerwaldes</div>
+      <div class="hi">Arberschutzhaus auf 1.380 m — Einkehr mit Fernblick bis Tschechien</div>
+      <div class="hi">Fünf markante Felsriegel am Gipfelplateau (Bärenriegel, Seeriegel)</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
+      <div class="rt">
         Start: <strong>Großer Arbersee-Parkplatz</strong><br>
-        → Umrundung des Arbersees (1,5 km)<br>
-        → Panoramaweg Aufstieg<br>
-        → durch schattige Wälder stetig bergauf<br>
+        → Umrundung Arbersee (1,5 km)<br>
+        → Panoramaweg, stetig bergauf<br>
         → <strong>Arberschutzhaus</strong> (Rast, 1.380 m)<br>
-        → Gipfelfelsen: Bärenriegel, Seeriegel<br>
+        → Bärenriegel, Seeriegel<br>
         → <strong>Arber-Gipfel 1.456 m</strong><br>
         → Abstieg Gondelbahn oder Fußweg<br>
         Ziel: <strong>Talstation</strong>
@@ -536,24 +420,23 @@
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Concorde Stellplatz Bodenmais</div>
-      <div class="stellplatz-desc">Bodenmais, Glasstraße · bekannter Stellplatz am Glasstraßen-Dorf · ruhig · Silberberg in Laufweite · gute Infrastruktur · gut bewerteter Ausgangspunkt für Arber-Touren</div>
-      <span class="price-tag price-cheap">~12–15 € / Nacht</span>
+      <div class="sp-name">Concorde Stellplatz Bodenmais</div>
+      <div class="sp-desc">Bodenmais, Glasstraße · ruhig, bekannter Stellplatz · Silberberg in Laufweite · gute Infrastruktur · idealer Ausgangspunkt für Arber-Wanderungen</div>
+      <span class="ptag pcheap">~12–15 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 6 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 6 -->
 <div class="day-card d6">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">6</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Bayerischer Wald — Ruhetag & Lusen (1.373 m)</h3>
+      <h3>Bayerischer Wald — Lusen (1.373 m)</h3>
       <div class="drive-info">
         <span class="drive-chip">🚗 Bodenmais → Waldhäuser (Lusen)</span>
         <span class="drive-chip">~45 km · ~50 min</span>
-        <span class="drive-chip">kurze Fahrt → ganztags wandern</span>
+        <span class="drive-chip">Kurze Fahrt → ganztags wandern</span>
       </div>
     </div>
     <div class="day-pills">
@@ -564,53 +447,47 @@
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Lusen-Bergtour: Fredenbrücke – Himmelsleiter – Gipfel</div>
+      <div class="tour-name">Lusen-Bergtour: Fredenbrücke – Glasarche – Himmelsleiter – Gipfel</div>
       <div class="tour-meta">
-        <span class="meta-chip">🥾 ~13 km</span>
-        <span class="meta-chip">~600 Hm</span>
-        <span class="meta-chip">4–5,5 h</span>
-        <span class="meta-chip hard">Anspruchsvoll</span>
+        <span class="mc">🥾 ~13 km</span><span class="mc">~600 Hm</span><span class="mc">4,5–5,5 h</span><span class="mc hard">Anspruchsvoll</span>
       </div>
-      <div class="highlight-item">Glasarche — Kunstobjekt im Nationalpark Bayerischer Wald</div>
-      <div class="highlight-item">Teufelsloch — markante Felsformation</div>
-      <div class="highlight-item">Himmelsleiter — steile Granitstufen-Treppe zum Gipfel</div>
-      <div class="highlight-item">Blockmeer am Gipfel (200.000 m² wilde Granitblöcke, Geotop Bayern)</div>
-      <div class="highlight-item">360°-Panorama: Arber, Böhmerwald, Alpen bei Föhn sichtbar</div>
+      <div class="hi">Glasarche — Kunstobjekt deutsch-tschechisches Grenzprojekt im Nationalpark</div>
+      <div class="hi">Himmelsleiter — steile Granitstufen-Treppe zum Gipfel</div>
+      <div class="hi">Blockmeer: 200.000 m² wilde Granitblöcke — Geotop Bayern (Auszeichnung)</div>
+      <div class="hi">360°-Panorama: Arber, Böhmerwald, bei Föhn Alpenkette sichtbar</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
+      <div class="rt">
         Start: <strong>Fredenbrücke, Waldhäuser</strong><br>
-        → Nationalpark-Weg Richtung Lusen<br>
-        → Bergbach-Naturlehrpfad<br>
+        → Nationalpark-Weg Lusen<br>
         → <strong>Glasarche</strong> → Teufelsloch<br>
-        → <strong>Himmelsleiter</strong> (steil, Granitstufen!)<br>
-        → <strong>Lusen-Gipfel 1.373 m</strong> + Blockmeer<br>
+        → <strong>Himmelsleiter</strong> (Granitstufen!)<br>
+        → <strong>Lusen-Gipfel 1.373 m</strong><br>
         → <strong>Lusenschutzhaus</strong> (Einkehr!)<br>
-        → Forststraße hinab nach Waldhäuser<br>
+        → Forststraße hinab<br>
         Ziel: <strong>Waldhäuser / Lusenparkplatz</strong>
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Campingplatz am Nationalpark, Spiegelau</div>
-      <div class="stellplatz-desc">Zwischen Klingenbrunn und Spiegelau · direkt am Nationalpark-Rand · naturnahe Lage · Strom, Sanitär · Bulli-freundlich · auch Schlaffässer (Kuriosität) · toller Ausgangspunkt für Lusen &amp; Rachel</div>
-      <span class="price-tag price-cheap">~14–18 € / Nacht</span>
+      <div class="sp-name">Campingplatz am Nationalpark, Spiegelau</div>
+      <div class="sp-desc">Zwischen Klingenbrunn und Spiegelau · direkt am Nationalpark-Rand · Strom, Sanitär · naturnahe Lage · auch Schlaffässer · toller Ausgangspunkt für Lusen & Rachel</div>
+      <span class="ptag pcheap">~14–18 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 7 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 7 -->
 <div class="day-card d7">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">7</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Altmühltal — Eichstätt & Donaudurchbruch</h3>
+      <h3>Altmühltal — Anreise & Donaudurchbruch</h3>
       <div class="drive-info">
-        <span class="drive-chip">🚗 Bayerischer Wald → Eichstätt / Kelheim</span>
+        <span class="drive-chip">🚗 Bayerischer Wald → Kelheim</span>
         <span class="drive-chip">~120 km · ~1,5 h</span>
-        <span class="drive-chip">Ankunft mittags → Wanderung oder Radtour starten</span>
+        <span class="drive-chip">Ankunft mittags → Wanderung/Bootsfahrt</span>
       </div>
     </div>
     <div class="day-pills">
@@ -621,162 +498,197 @@
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Kloster Weltenburg & Donaudurchbruch ab Kelheim</div>
+      <div class="tour-name">Donaudurchbruch & Kloster Weltenburg ab Kelheim</div>
       <div class="tour-meta">
-        <span class="meta-chip">🥾 ~8–10 km</span>
-        <span class="meta-chip">~180 Hm</span>
-        <span class="meta-chip">3–4 h</span>
-        <span class="meta-chip easy">Leicht–Mittel</span>
+        <span class="mc">🥾 ~8–10 km</span><span class="mc">~180 Hm</span><span class="mc">3–4 h</span><span class="mc easy">Leicht–Mittel</span>
       </div>
-      <div class="highlight-item">Donaudurchbruch — engste Schlucht der Donau, senkrechte Kalkfelsen</div>
-      <div class="highlight-item">Kloster Weltenburg (620 n. Chr.) — ältestes Kloster Bayerns, Klosterbier</div>
-      <div class="highlight-item">Fähre über die Donau oder Wanderung entlang Steilufer</div>
-      <div class="highlight-item">Blick vom Befreiungshalle Kelheim (Leo von Klenze, 1863)</div>
-      <div class="highlight-item">Tatzlwurm Essing: längste Holzbrücke Europas (193 m)</div>
+      <div class="hi">Donaudurchbruch — engste Donauschlucht Europas, senkrechte Kalkfelsen</div>
+      <div class="hi">Kloster Weltenburg (620 n. Chr.) — ältestes Kloster Bayerns</div>
+      <div class="hi">Weltenburg: Klosterbier-Brauerei, Fähre über die Donau</div>
+      <div class="hi">Befreiungshalle Kelheim (Leo von Klenze 1863) mit Panoramablick</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
-        Start: <strong>Stellplatz Am Pflegerspitz, Kelheim</strong><br>
-        → Befreiungshalle (Blick)<br>
+      <div class="rt">
+        Start: <strong>Stellplatz Kelheim / Pflegerspitz</strong><br>
+        → <strong>Befreiungshalle</strong> (Aussicht!)<br>
         → Donauufer Richtung Schlucht<br>
         → <strong>Donaudurchbruch</strong> (Steilfelsen)<br>
-        → <strong>Kloster Weltenburg</strong> (Fähre oder Fuß)<br>
-        → Klosterbier-Einkehr empfohlen!<br>
-        → zurück Richtung Kelheim<br>
-        → optional: Weiterfahrt Essing / Tatzlwurm
+        → <strong>Kloster Weltenburg</strong> (Fähre)<br>
+        → Klosterbier-Einkehr!<br>
+        → zurück Kelheim-Uferweg
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Wohnmobilstellplatz Am Pflegerspitz, Kelheim</div>
-      <div class="stellplatz-desc">Direkt an der Donau und am Donau-Radweg · empfohlen von Freeontour · Altstadt fußläufig · idealer Ausgangspunkt Donaudurchbruch · ganzjährig nutzbar</div>
-      <span class="price-tag price-cheap">~10–14 € / Nacht</span>
+      <div class="sp-name">Wohnmobilstellplatz Am Pflegerspitz, Kelheim</div>
+      <div class="sp-desc">Direkt an der Donau und am Donau-Radweg · Altstadt fußläufig · idealer Ausgangspunkt Donaudurchbruch · ganzjährig · von Freeontour empfohlen</div>
+      <span class="ptag pcheap">~10–14 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 8 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 8 -->
 <div class="day-card d8">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">8</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Altmühltal — Ruhetag & Radtour Eichstätt–Kinding</h3>
+      <h3>Altmühltal — E-Bike Große Runde: Eichstätt – Pappenheim – Solnhofen</h3>
       <div class="drive-info">
-        <span class="drive-chip">📍 Kein Fahrtag oder kurze Fahrt: Kelheim → Eichstätt (~40 km)</span>
+        <span class="drive-chip">🚗 Kelheim → Eichstätt</span>
+        <span class="drive-chip">~40 km · ~35 min</span>
+        <span class="drive-chip">Ankunft früh → ganztägige E-Bike-Tour</span>
       </div>
     </div>
     <div class="day-pills">
-      <span class="pill" style="background:var(--blue-l);color:var(--blue)">🚴 Radtour</span>
+      <span class="pill" style="background:#E6F1FB;color:#0C447C">⚡ E-Bike</span>
       <span class="pill" style="background:var(--gray-l);color:var(--gray)">⭐ Leicht</span>
     </div>
   </div>
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Altmühltal-Radweg: Eichstätt – Kinding (Abschnitt)</div>
+      <div class="tour-name">Altmühltal-Radweg: Eichstätt – Solnhofen – Pappenheim – Eichstätt (Runde)</div>
       <div class="tour-meta">
-        <span class="meta-chip">🚴 ~35–45 km</span>
-        <span class="meta-chip">~180 Hm</span>
-        <span class="meta-chip">2,5–3,5 h</span>
-        <span class="meta-chip easy">Leicht</span>
+        <span class="mc ebike">⚡ ~75 km</span><span class="mc">~280 Hm</span><span class="mc">4–5 h</span><span class="mc easy">Leicht</span>
       </div>
-      <div class="highlight-item">Eichstätt: barockes Gesamtkunstwerk, Willibaldsburg über der Stadt</div>
-      <div class="highlight-item">Bizarre Dolomitfelsen, Wacholderheiden, Burgen über dem Tal</div>
-      <div class="highlight-item">Fossiliensteinbrüche bei Solnhofen (Archaeopteryx-Fundort!)</div>
-      <div class="highlight-item">Burg Prunn — schönste Burg des Altmühltals</div>
-      <div class="highlight-item">Freizeitbus mit Fahrradanhänger für Rückfahrt (saisonal)</div>
+      <div class="hi">Eichstätt: Barockstadt, Willibaldsburg, mediterranes Flair</div>
+      <div class="hi">Fossiliensteinbrüche Solnhofen — Archaeopteryx-Fundort weltweit bekannt</div>
+      <div class="hi">Burg Pappenheim auf Umlaufberg, Blick ins Altmühltal</div>
+      <div class="hi">Dolomitfelsen, Wacholderheiden, Burgen — schönster Altmühltal-Abschnitt</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
-        Start: <strong>Eichstätt</strong> (Stellplatz an der Altmühl)<br>
-        → Altmühltal-Radweg flussabwärts<br>
-        → Dollnstein → Solnhofen (Fossilien!)<br>
-        → <strong>Pappenheim</strong> (Burg besichtigen)<br>
-        → Treuchtlingen → weiter nach<br>
-        → <strong>Kipping / Kinding</strong> als Ziel<br>
-        → Rückfahrt mit Freizeitbus (saisonal)<br>
-        → oder Rundtour zurück (~35 km Gesamte)
+      <div class="rt">
+        Start: <strong>Eichstätt</strong> (Stellplatz Altmühl)<br>
+        → Altmühlradweg flussabwärts<br>
+        → Dollnstein → <strong>Solnhofen</strong> (Fossilien!)<br>
+        → Weiterfahrt → <strong>Pappenheim</strong><br>
+        → Burg Pappenheim besichtigen<br>
+        → Rückweg Altmühlradweg flussaufwärts<br>
+        → zurück <strong>Eichstätt</strong><br>
+        <span style="opacity:.6">Freizeitbus mit Radanhänger als Abkürzung (saisonal)</span>
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Wohnmobil- und Zeltplatz Eichstätt</div>
-      <div class="stellplatz-desc">Pirkheimerstraße, Eichstätt · direkt an der Altmühl und am Altmühlradweg · Ausgangspunkt für die schönsten Abschnitte des Altmühltals · ganzjährig · gute Ausstattung</div>
-      <span class="price-tag price-cheap">~12–16 € / Nacht</span>
+      <div class="sp-name">Wohnmobil- und Zeltplatz Eichstätt</div>
+      <div class="sp-desc">Pirkheimerstraße, Eichstätt · direkt an der Altmühl und am Altmühlradweg · Ausgangspunkt schönster Abschnitt · ganzjährig · gute Ausstattung</div>
+      <span class="ptag pcheap">~12–16 € / Nacht</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 9 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 9 -->
 <div class="day-card d9">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">9</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Nürnberg / Franken — Historische Altstadt & Pegnitz-Radtour</h3>
+      <h3>Ingolstadt — Anreise & Altstadt-Bummel</h3>
       <div class="drive-info">
-        <span class="drive-chip">🚗 Eichstätt → Nürnberg</span>
-        <span class="drive-chip">~90 km · ~1 h</span>
-        <span class="drive-chip">Stadtbummel + Abschlussabend</span>
+        <span class="drive-chip">🚗 Eichstätt → Ingolstadt</span>
+        <span class="drive-chip">~40 km · ~35 min</span>
+        <span class="drive-chip">Kurzfahrt → Stadtbesichtigung, bekannte Stelle</span>
       </div>
     </div>
     <div class="day-pills">
-      <span class="pill" style="background:var(--purple-l);color:var(--purple)">🚴 Radtour</span>
+      <span class="pill" style="background:var(--purple-l);color:var(--purple)">🚴 Stadtradeln</span>
       <span class="pill" style="background:var(--gray-l);color:var(--gray)">⭐ Leicht</span>
     </div>
   </div>
   <div class="day-body">
     <div class="section">
       <div class="section-title">Tour</div>
-      <div class="tour-name">Pegnitz-Radweg: Stadtwald – Altstadt Nürnberg</div>
+      <div class="tour-name">Donau-Radweg & Altstadt: Ingolstadt Stadtparkour</div>
       <div class="tour-meta">
-        <span class="meta-chip">🚴 ~25–35 km</span>
-        <span class="meta-chip">~80 Hm</span>
-        <span class="meta-chip">2–3 h</span>
-        <span class="meta-chip easy">Leicht</span>
+        <span class="mc ebike">⚡ ~45 km</span><span class="mc">~80 Hm</span><span class="mc">2,5–3 h</span><span class="mc easy">Leicht</span>
       </div>
-      <div class="highlight-item">Nürnberger Burg — Zinnenburg über der mittelalterlichen Altstadt</div>
-      <div class="highlight-item">Pegnitz-Ufer durch Stadtwald und historische Viertel</div>
-      <div class="highlight-item">Germanisches Nationalmuseum (größtes kulturhistorisches Museum Deutschlands)</div>
-      <div class="highlight-item">Bratwurstküche am Hauptmarkt — Nürnberger Bratwürste!</div>
-      <div class="highlight-item">Abschlussabend: Bier-Keller-Kultur in der Altstadt</div>
+      <div class="hi">Ingolstädter Altstadt: Kreuztor, Alte Anatomie, Stadtmauer</div>
+      <div class="hi">Donauufer-Radweg flussaufwärts durch Aulandschaft</div>
+      <div class="hi">Audi Museum Mobile (opt. Besichtigung, ~12 €)</div>
+      <div class="hi">Abschlussabend: Brauereigasthäuser Ingolstadt, Biergarten am Donauufer</div>
     </div>
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
-        Start: <strong>Stellplatz / Campingpark Nürnberg</strong><br>
-        → Pegnitz-Radweg stadteinwärts<br>
-        → Stadtwald → Tiergarten Nürnberg<br>
-        → Altstadt-Einstieg Laufer Tor<br>
-        → <strong>Kaiserburg Nürnberg</strong><br>
-        → Hauptmarkt → Bratwurstküche<br>
-        → Germanisches Nationalmuseum<br>
-        → Rück: Pegnitz-Radweg
+      <div class="rt">
+        Start: <strong>Stellplatz am Hallenbad</strong><br>
+        → Altstadt zu Fuß (500 m!) erkunden<br>
+        → <strong>Kreuztor, Stadtmauer</strong>, Neue Residenz<br>
+        → optional: <strong>Audi Museum</strong><br>
+        → Donau-Radweg flussaufwärts nach Neuburg<br>
+        → ca. 20 km hin, 20 km zurück<br>
+        → Abend: <strong>Biergarten am Donauufer</strong>
       </div>
     </div>
     <div class="section">
       <div class="section-title">Stellplatz</div>
-      <div class="stellplatz-name">Campingpark Nürnberg</div>
-      <div class="stellplatz-desc">Hans-Kalb-Straße 56, Nürnberg · ADAC-Camping · gut erschlossen · S-Bahn in die Altstadt · Vollausstattung · ganzjährig geöffnet · nahe Pegnitz-Radweg</div>
-      <span class="price-tag price-paid">~18–22 € / Nacht</span>
+      <div class="sp-name">⭐ Wohnmobilstellplatz am Hallenbad</div>
+      <div class="sp-desc">Jahnstraße, Ingolstadt · <strong>der bekannte Ingolstadt-Stellplatz</strong> · 13 Plätze · 500 m zur Altstadt · 6 € / 24h · Strom inklusive · Ver/Entsorgung · ganzjährig · max. 3 Nächte</div>
+      <span class="ptag pcheap">6 € / Nacht + Strom gratis!</span>
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════ TAG 10 ══════════════ -->
+<!-- ═══════════════════════════════════════════ TAG 10 -->
 <div class="day-card d10">
   <div class="day-header">
     <div class="day-badge"><span class="day-num">10</span><span class="day-word">Tag</span></div>
     <div class="day-title">
-      <h3>Heimfahrt — Nürnberg → Berlin</h3>
+      <h3>Ingolstadt — Ruhetag & Altmühltal-Runde E-Bike</h3>
       <div class="drive-info">
-        <span class="drive-chip">🚗 Nürnberg → Berlin (A9)</span>
-        <span class="drive-chip">~440 km · ~4–4,5 h</span>
-        <span class="drive-chip">Morgenfrüh starten · Mittagsrast Saale-Tal optional</span>
+        <span class="drive-chip">📍 Kein Fahrtag</span>
+        <span class="drive-chip">2. Nacht Hallenbad-Stellplatz</span>
+      </div>
+    </div>
+    <div class="day-pills">
+      <span class="pill" style="background:#E6F1FB;color:#0C447C">⚡ E-Bike</span>
+      <span class="pill" style="background:var(--gray-l);color:var(--gray)">⭐ Leicht</span>
+    </div>
+  </div>
+  <div class="day-body">
+    <div class="section">
+      <div class="section-title">Tour</div>
+      <div class="tour-name">Altmühltal ab Ingolstadt: Riedenburg – Burgen – Rückkehr</div>
+      <div class="tour-meta">
+        <span class="mc ebike">⚡ ~70 km</span><span class="mc">~220 Hm</span><span class="mc">3,5–4 h</span><span class="mc easy">Leicht</span>
+      </div>
+      <div class="hi">Riedenburg: 3 Burgen auf engem Raum (Rabenstein, Rosenburg, Tachenstein)</div>
+      <div class="hi">Burg Prunn — spektakulärste Burganlage des gesamten Altmühltals</div>
+      <div class="hi">Essing: längste Holzbrücke Europas (193 m) über den Main-Donau-Kanal</div>
+      <div class="hi">Archäologiepark Altmühltal: keltisches Stadttor-Rekonstruktion</div>
+    </div>
+    <div class="section">
+      <div class="section-title">Route</div>
+      <div class="rt">
+        Start: <strong>Ingolstadt Stellplatz am Hallenbad</strong><br>
+        → Altmühlradweg flussaufwärts<br>
+        → Archäologiepark, Gronsdorf<br>
+        → <strong>Essing</strong> (Holzbrücke, Burg Randeck)<br>
+        → <strong>Burg Prunn</strong> (Abstecher lohnt!)<br>
+        → <strong>Riedenburg</strong> (3 Burgen, Rast)<br>
+        → Rückweg Altmühlradweg<br>
+        → zurück <strong>Ingolstadt</strong>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Stellplatz</div>
+      <div class="sp-name">Wohnmobilstellplatz am Hallenbad (2. Nacht)</div>
+      <div class="sp-desc">Selber Platz. Abschlussabend in Ingolstadts Altstadt — Kreuztor beleuchtet, Brauereigasthäuser, gemütlicher Bummel als Reise-Ausklang.</div>
+      <span class="ptag pcheap">6 € / Nacht</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ TAG 11 -->
+<div class="day-card d11">
+  <div class="day-header">
+    <div class="day-badge"><span class="day-num">11</span><span class="day-word">Tag</span></div>
+    <div class="day-title">
+      <h3>Heimfahrt — Ingolstadt → Berlin (A9)</h3>
+      <div class="drive-info">
+        <span class="drive-chip">🚗 Ingolstadt → Berlin</span>
+        <span class="drive-chip">~480 km · ~4–4,5 h</span>
+        <span class="drive-chip">Morgen-Abfahrt → mittags zu Hause</span>
       </div>
     </div>
     <div class="day-pills">
@@ -786,60 +698,337 @@
   <div class="day-body">
     <div class="section">
       <div class="section-title">Route</div>
-      <div class="route-text">
-        Abfahrt: <strong>Nürnberg früh (7–8 Uhr)</strong><br>
-        → A9 Richtung Berlin<br>
-        → Saale-Tal / Schleiz: Pause optional<br>
-        → Weiterfahrt über Hof → Leipzig<br>
-        → <strong>Berlin</strong> ca. 11–12 Uhr<br>
-        <br>
-        <strong>Tipp:</strong> Abstecher Saale-Schleifen<br>
-        bei Saalburg (B85) lohnt +30 min
+      <div class="rt">
+        Abfahrt: <strong>Ingolstadt früh (7–8 Uhr)</strong><br>
+        → A9 Richtung München/Nürnberg<br>
+        → Nürnberg Kreuz → A9 Nord<br>
+        → Hof → Leipzig → <strong>Berlin</strong><br>
+        Ankunft ca. <strong>12–13 Uhr</strong><br><br>
+        <strong>Tipp:</strong> Bei Hof/Münchberg<br>
+        kurze Pause im Fichtelgebirge<br>
+        (+20 min, schöner Rastpunkt)
       </div>
     </div>
     <div class="section">
       <div class="section-title">Alternativpause</div>
-      <div class="route-text">
-        <strong>Raststätte Frankenwald</strong> (A9)<br>
-        Schöne Aussicht über Frankenwald<br><br>
-        <strong>Bad Berneck / Bindlach:</strong><br>
-        Kurze Wanderung im Fichtelgebirge<br>
-        (~1,5 h Umweg möglich)<br><br>
-        <strong>Saale-Stausee Bleiloch:</strong><br>
-        Bayerisches Meer, Umleitung B90<br>
-        für Naturliebhaber empfohlen
+      <div class="rt">
+        <strong>Raststätte Frankenwald (A9):</strong><br>
+        Panoramablick über Frankenwald<br><br>
+        <strong>Bad Berneck:</strong> Kurzes Fichtelgebirge-Stück<br>
+        (+1,5 h Umweg, für Genießer)<br><br>
+        <strong>Saale-Schleifen bei Saalburg:</strong><br>
+        B85 statt Autobahn<br>
+        Das „Bayerische Meer" — lohnt!
       </div>
     </div>
     <div class="section">
       <div class="section-title">Hinweis</div>
-      <div class="stellplatz-desc" style="margin-top:4px">Kein Stellplatz nötig — Heimfahrt. Wer unterwegs übernachten möchte: Park4night entlang der A9 zeigt mehrere kostenlose Stellplätze bei Hof/Münchberg.</div>
-      <span class="price-tag price-free">Heimkehr 🏠</span>
+      <div class="sp-desc" style="margin-top:4px">Kein Stellplatz nötig — Heimfahrt. Die A9 ist eine der direktesten Routen Berlin–Bayern, kaum Umweg möglich. Strecke komplett ausgeschildert.</div>
+      <span class="ptag pfree" style="margin-top:4px">Heimkehr 🏠</span>
     </div>
   </div>
 </div>
 
 
-<!-- FOOTER -->
-<div class="footer">
-  <div class="footer-box">
-    <h4>Zusammenfassung</h4>
-    <div class="footer-row"><span class="label">Gesamte Fahrtstrecke</span><span class="value">~1.750 km</span></div>
-    <div class="footer-row"><span class="label">Aktivitäten gesamt</span><span class="value">4× Rad · 6× Wanderung</span></div>
-    <div class="footer-row"><span class="label">Höhenmeter gesamt (Wandern)</span><span class="value">~2.580 hm ↑</span></div>
-    <div class="footer-row"><span class="label">Aktive km (Rad)</span><span class="value">~130 km Rad</span></div>
-    <div class="footer-row"><span class="label">Aktive km (Fuß)</span><span class="value">~73 km zu Fuß</span></div>
-    <div class="footer-row"><span class="label">Stellplatzkosten (9 Nächte)</span><span class="value">~85–120 €</span></div>
-    <div class="footer-row"><span class="label">Günstiger Tipp: Womopark24 Thale</span><span class="value">mit HATIX-Bus!</span></div>
+<!-- ═══════════════════════════════════════════ KARTE -->
+<div class="map-section">
+  <div class="map-header">
+    <div>
+      <h2>🗺️ Übersichtskarte — Bulli-Südreise</h2>
+      <p>Marker anklicken → direkt zu Apple Maps / Google Maps navigieren · Stellplatz &amp; Tourenstart mit einem Tap</p>
+    </div>
   </div>
-  <div class="footer-box">
-    <h4>Wichtige Hinweise</h4>
-    <div class="tip-item"><span class="tip-icon">📱</span><div class="tip-text"><strong>park4night</strong> für aktuelle Stellplatz-Infos. HATIX-Ticket im Harz (bei Kurtaxe-Plätzen): kostenlose Busfahrten inklusive!</div></div>
-    <div class="tip-item"><span class="tip-icon">🚴</span><div class="tip-text"><strong>Fahrräder mitnehmen</strong> — Heck- oder Dachträger. Altmühltal-Radweg und Selketal-Radweg sind Highlight-Strecken ohne Bergwertung.</div></div>
-    <div class="tip-item"><span class="tip-icon">🥾</span><div class="tip-text"><strong>Bayerischer Wald:</strong> Lusen-Tour (Tag 6) ist die anspruchsvollste Tour der Reise. Trittsichere Schuhe zwingend, festes Schuhwerk am Blockmeer!</div></div>
-    <div class="tip-item"><span class="tip-icon">🦎</span><div class="tip-text"><strong>Nationalpark Bayerischer Wald:</strong> Im Sommer vor 8 Uhr / nach 18 Uhr am Gfäll-Parkplatz (Rachel-Bus-Pflicht tagsüber).</div></div>
-    <div class="tip-item"><span class="tip-icon">🪙</span><div class="tip-text"><strong>Bayern-Stellplätze</strong> oft nur Münzzahlung. Kleingeld einplanen! Altmühltal: Freizeitbus mit Radanhänger für Rückfahrten nutzen (saisonal Mai–Okt).</div></div>
+  <div id="route-map"></div>
+  <div class="map-legend">
+    <div class="leg"><div class="leg-line" style="background:#185FA5"></div><span>Fahrtroute Bulli (~1.790 km)</span></div>
+    <div class="leg"><div class="leg-dot" style="background:#BA7517"></div><span>🥾 Wanderstation</span></div>
+    <div class="leg"><div class="leg-dot" style="background:#185FA5"></div><span>🚴 E-Bike-Station</span></div>
+    <div class="leg"><div class="leg-dot" style="background:#534AB7"></div><span>🌆 Stadtstation</span></div>
+    <div class="leg"><div class="leg-dot" style="background:#1A1A18"></div><span>Start/Ziel Berlin</span></div>
+    <div class="leg" style="margin-left:auto;color:#0F6E56;font-weight:500">🅿️ Tap → Navigation öffnet sich in Maps-App</div>
   </div>
 </div>
+
+
+<!-- ═══════════════════════════════════════════ FOOTER -->
+<div class="footer">
+  <div class="fbox">
+    <h4>Zusammenfassung</h4>
+    <div class="fr"><span class="l">Gesamte Fahrtstrecke</span><span class="v">~1.790 km</span></div>
+    <div class="fr"><span class="l">Reihenfolge</span><span class="v">Optimal für kürzeste Strecke</span></div>
+    <div class="fr"><span class="l">E-Bike-Touren</span><span class="v">4× · Ø ~64 km</span></div>
+    <div class="fr"><span class="l">Wanderungen</span><span class="v">6× · ~73 km gesamt zu Fuß</span></div>
+    <div class="fr"><span class="l">Höhenmeter (Wandern)</span><span class="v">~2.580 hm ↑</span></div>
+    <div class="fr"><span class="l">Stellplatzkosten (10 Nächte)</span><span class="v">~95–130 €</span></div>
+    <div class="fr"><span class="l">Ingolstadt Stellplatz</span><span class="v">6 €/Nacht · Strom gratis!</span></div>
+    <div class="fr"><span class="l">Heimfahrt via A9</span><span class="v">~480 km · ~4,5 h</span></div>
+  </div>
+  <div class="fbox">
+    <h4>Wichtige Hinweise</h4>
+    <div class="tip"><span class="ti">📱</span><div class="tt"><strong>park4night</strong> für aktuelle Stellplatz-Infos. Im Harz: HATIX-Ticket bei Kurtaxe-Plätzen → Busfahrten kostenlos!</div></div>
+    <div class="tip"><span class="ti">⚡</span><div class="tt"><strong>E-Bike Akku:</strong> Touren über 60 km — Ladestopp ca. Halbzeit einplanen. Viele Cafés und Gaststätten am Altmühlradweg bieten Laden an.</div></div>
+    <div class="tip"><span class="ti">🥾</span><div class="tt"><strong>Lusen (Tag 6)</strong> ist die anspruchsvollste Tour: Granitstufen, Blockmeer. Trittsichere Wanderschuhe zwingend!</div></div>
+    <div class="tip"><span class="ti">🅿️</span><div class="tt"><strong>Ingolstadt Hallenbad:</strong> Früh ankommen — max. 13 Plätze, schnell voll. Nur 6 €/Tag, Strom gratis — einer der günstigsten Stadtstellplätze Bayerns.</div></div>
+    <div class="tip"><span class="ti">🪙</span><div class="tt"><strong>Münzgeld einplanen!</strong> Mehrere Stellplätze (Kelheim, Bodenmais) akzeptieren nur Münzzahlung oder App. Kleingeld bereithalten.</div></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ MAP SCRIPT -->
+<style>
+  /* Nav button styles in popups */
+  .nav-btns { display:flex; flex-direction:column; gap:5px; margin-top:8px; }
+  .nav-btn {
+    display:flex; align-items:center; gap:6px;
+    padding:7px 10px; border-radius:8px; border:none;
+    font-family:'DM Sans',system-ui,sans-serif; font-size:11px; font-weight:600;
+    cursor:pointer; text-decoration:none; width:100%; box-sizing:border-box;
+    transition:opacity .15s;
+  }
+  .nav-btn:hover { opacity:.82; }
+  .nav-btn-park {
+    background:#E1F5EE; color:#0F6E56;
+  }
+  .nav-btn-tour {
+    background:#E6F1FB; color:#185FA5;
+  }
+  .nav-btn-gm {
+    background:#FAECE7; color:#993C1D;
+  }
+  .nav-btn span.icon { font-size:14px; flex-shrink:0; }
+  .nav-divider { border:none; border-top:1px solid #E0DED6; margin:7px 0 4px; }
+  .pop-hint { font-size:10px; color:#9B9A95; text-align:center; margin-top:4px; }
+</style>
+
+<script>
+// ── Detect iOS / Android for native maps deep-link ────────────────────────
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const isAndroid = /Android/.test(navigator.userAgent);
+
+// Build navigation URL: Apple Maps on iOS, Google Maps everywhere else
+function navUrl(lat, lng, label) {
+  const enc = encodeURIComponent(label);
+  if (isIOS) {
+    // Apple Maps – opens in Maps app on iPhone/iPad
+    return `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=d&t=m`;
+  } else {
+    // Google Maps – opens app on Android, browser otherwise
+    return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  }
+}
+
+// Google Maps place search link (shows place + "Navigate" button)
+function gmPlaceUrl(lat, lng, label) {
+  return `https://maps.google.com/?q=${lat},${lng}`;
+}
+
+// ── Map init ──────────────────────────────────────────────────────────────
+const map = L.map('route-map', { scrollWheelZoom: true });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap', maxZoom: 18
+}).addTo(map);
+
+const CW = '#BA7517';
+const CR = '#185FA5';
+const CP = '#534AB7';
+const C  = '#185FA5';
+
+function mkIcon(color, emoji, size) {
+  size = size || 30;
+  return L.divIcon({
+    className:'',
+    iconAnchor:[size/2, size],
+    popupAnchor:[0, -(size+4)],
+    html:`<div style="width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+      background:${color};border:2.5px solid rgba(255,255,255,.95);
+      box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;">
+      <span style="transform:rotate(45deg);font-size:${Math.round(size*.44)}px;line-height:1;">${emoji}</span></div>`
+  });
+}
+function homeIcon() {
+  return L.divIcon({className:'',iconAnchor:[9,9],popupAnchor:[0,-16],
+    html:`<div style="width:18px;height:18px;border-radius:50%;background:#1A1A18;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35);"></div>`});
+}
+
+// ── Popup builder with nav buttons ────────────────────────────────────────
+function pop(opts) {
+  const { badge, bcolor, title, day, tourLine, spLine,
+          parkLat, parkLng, parkLabel,
+          tourLat, tourLng, tourLabel } = opts;
+
+  const parkNav   = navUrl(parkLat, parkLng, parkLabel);
+  const parkGm    = gmPlaceUrl(parkLat, parkLng, parkLabel);
+  const tourNav   = tourLat ? navUrl(tourLat, tourLng, tourLabel) : null;
+  const tourGm    = tourLat ? gmPlaceUrl(tourLat, tourLng, tourLabel) : null;
+  const mapsWord  = isIOS ? 'Apple Maps' : 'Google Maps';
+
+  return `<div class="pop">
+    <div class="pop-badge" style="background:${bcolor}22;color:${bcolor}">${badge}</div>
+    <div class="pop-title">${title}</div>
+    <div class="pop-day">${day}</div>
+    <div class="pop-tour">${tourLine}</div>
+    <div class="pop-sp">${spLine}</div>
+    <hr class="nav-divider">
+    <div class="nav-btns">
+      <a class="nav-btn nav-btn-park" href="${parkNav}" target="_blank" rel="noopener">
+        <span class="icon">🅿️</span>Navigation zum Stellplatz
+      </a>
+      <a class="nav-btn nav-btn-gm" href="${parkGm}" target="_blank" rel="noopener">
+        <span class="icon">🗺️</span>Stellplatz in ${mapsWord} anzeigen
+      </a>
+      ${tourNav ? `<a class="nav-btn nav-btn-tour" href="${tourNav}" target="_blank" rel="noopener">
+        <span class="icon">🥾</span>Navigation zum Tourenstart
+      </a>` : ''}
+      ${tourGm ? `<a class="nav-btn nav-btn-gm" href="${tourGm}" target="_blank" rel="noopener">
+        <span class="icon">📍</span>Tourenstart in ${mapsWord}
+      </a>` : ''}
+    </div>
+    <div class="pop-hint">Öffnet ${mapsWord} mit Routenberechnung</div>
+  </div>`;
+}
+
+// ── Route polyline ────────────────────────────────────────────────────────
+const routeCoords = [
+  [52.52,   13.405],
+  [51.736,  11.010],
+  [50.966,  10.306],
+  [50.700,  10.720],
+  [49.070,  13.102],
+  [48.760,  13.460],
+  [48.917,  11.869],
+  [48.891,  11.185],
+  [48.761,  11.421],
+  [52.52,   13.405],
+];
+L.polyline(routeCoords, {color:C, weight:3.5, opacity:.75, dashArray:'9 5'}).addTo(map);
+
+// ── Berlin ────────────────────────────────────────────────────────────────
+const berlinNav = navUrl(52.52, 13.405, 'Berlin');
+L.marker([52.52,13.405], {icon:homeIcon()})
+  .bindPopup(`<div class="pop">
+    <div class="pop-title">🏠 Berlin</div>
+    <div class="pop-day">Start & Ziel · Tag 1 (Abfahrt) und Tag 11 (Heimkehr)</div>
+    <hr class="nav-divider">
+    <div class="nav-btns">
+      <a class="nav-btn nav-btn-park" href="${berlinNav}" target="_blank" rel="noopener">
+        <span class="icon">🏠</span>Navigation nach Berlin
+      </a>
+    </div>
+  </div>`, {maxWidth:280})
+  .addTo(map);
+
+// ── Stops ─────────────────────────────────────────────────────────────────
+// Each stop: marker coords, stellplatz coords, tourenstart coords
+const stops = [
+  {
+    lat:51.736, lng:11.010, ic:mkIcon(CW,'🥾'),
+    opts:{
+      badge:'T1–2 · Harz', bcolor:CW,
+      title:'Thale / Bodetal',
+      day:'Tag 1–2 · Anreise ~200 km',
+      tourLine:'🥾 Bodetal-Runde: 15,5 km · 270 Hm · 4–5 h<br><span>⚡ Selketal-Radweg: ~65 km am Tag 2</span>',
+      spLine:'📍 Womopark24 Thale · ~12–15 €/Nacht + HATIX-Bus!',
+      // Womopark24 Thale (Am Silberbach)
+      parkLat:51.7202, parkLng:11.0286, parkLabel:'Womopark24 Thale',
+      // Talstation Seilbahn Thale (Bodetal-Wanderstart)
+      tourLat:51.7333, tourLng:11.0167, tourLabel:'Talstation Bodetal Thale'
+    }
+  },
+  {
+    lat:50.966, lng:10.306, ic:mkIcon(CW,'🥾'),
+    opts:{
+      badge:'T3–4 · Thür. Wald', bcolor:CW,
+      title:'Eisenach / Oberhof',
+      day:'Tag 3–4 · Anreise ~130 km',
+      tourLine:'🥾 Drachenschlucht & Wartburg: 12 km · 380 Hm<br><span>⚡ Rennsteig-Runde Oberhof: ~65 km am Tag 4</span>',
+      spLine:'📍 Campingpark Eisenach / Naturcamp Meyersgrund',
+      // Campingpark Eisenach
+      parkLat:50.9744, parkLng:10.3142, parkLabel:'Campingpark Eisenach',
+      // Parkplatz Hohe Sonne (Drachenschlucht-Start)
+      tourLat:50.9566, tourLng:10.2920, tourLabel:'Parkplatz Hohe Sonne Drachenschlucht'
+    }
+  },
+  {
+    lat:49.070, lng:13.102, ic:mkIcon(CW,'🥾'),
+    opts:{
+      badge:'T5 · Bayer. Wald', bcolor:CW,
+      title:'Bodenmais / Großer Arber',
+      day:'Tag 5 · Anreise ~260 km',
+      tourLine:'🥾 Arber-Panoramaweg: 12 km · 550 Hm · 4–5 h<br><span>Gipfel 1.456 m · Arberschutzhaus Einkehr</span>',
+      spLine:'📍 Concorde Stellplatz Bodenmais · ~12–15 €',
+      // Concorde Stellplatz Bodenmais
+      parkLat:49.0718, parkLng:13.1008, parkLabel:'Concorde Stellplatz Bodenmais',
+      // Großer Arbersee Parkplatz (Wanderstart)
+      tourLat:49.1200, tourLng:13.1058, tourLabel:'Großer Arbersee Parkplatz'
+    }
+  },
+  {
+    lat:48.760, lng:13.460, ic:mkIcon(CW,'🥾'),
+    opts:{
+      badge:'T6 · Bayer. Wald', bcolor:CW,
+      title:'Spiegelau / Lusen',
+      day:'Tag 6 · kurze Fahrt ~45 km',
+      tourLine:'🥾 Lusen-Tour: 13 km · 600 Hm · 4,5–5,5 h<br><span>Himmelsleiter · Blockmeer · Gipfel 1.373 m</span>',
+      spLine:'📍 Campingplatz am Nationalpark, Spiegelau',
+      // Campingplatz Nationalpark Spiegelau
+      parkLat:48.7563, parkLng:13.3778, parkLabel:'Campingplatz Nationalpark Spiegelau',
+      // Fredenbrücke Waldhäuser (Lusen-Start)
+      tourLat:48.7656, tourLng:13.5080, tourLabel:'Fredenbrücke Waldhäuser Lusen-Start'
+    }
+  },
+  {
+    lat:48.917, lng:11.869, ic:mkIcon(CW,'🥾'),
+    opts:{
+      badge:'T7 · Altmühltal', bcolor:CW,
+      title:'Kelheim / Donaudurchbruch',
+      day:'Tag 7 · Anreise ~120 km',
+      tourLine:'🥾 Donaudurchbruch & Kloster Weltenburg: 8–10 km<br><span>Ältestes Kloster Bayerns · Klosterbier!</span>',
+      spLine:'📍 Wohnmobilstellplatz Am Pflegerspitz · ~10–14 €',
+      // Stellplatz Am Pflegerspitz Kelheim
+      parkLat:48.9200, parkLng:11.8780, parkLabel:'Wohnmobilstellplatz Pflegerspitz Kelheim',
+      // Befreiungshalle Kelheim (Wanderstart)
+      tourLat:48.9167, tourLng:11.8717, tourLabel:'Befreiungshalle Kelheim Wanderstart'
+    }
+  },
+  {
+    lat:48.891, lng:11.185, ic:mkIcon(CR,'🚴'),
+    opts:{
+      badge:'T8 · Altmühltal', bcolor:CR,
+      title:'Eichstätt — Altmühlradweg',
+      day:'Tag 8 · Umzug von Kelheim ~40 km',
+      tourLine:'⚡ Eichstätt – Solnhofen – Pappenheim: ~75 km<br><span>Fossilien · Burg Pappenheim · Wacholderheiden</span>',
+      spLine:'📍 Wohnmobil- & Zeltplatz Eichstätt · ~12–16 €',
+      // Wohnmobil-/Zeltplatz Eichstätt
+      parkLat:48.8930, parkLng:11.1920, parkLabel:'Wohnmobilstellplatz Eichstätt Pirkheimerstraße',
+      // Eichstätt Altmühlradweg Start
+      tourLat:48.8910, tourLng:11.1850, tourLabel:'Altmühlradweg Eichstätt E-Bike-Start'
+    }
+  },
+  {
+    lat:48.761, lng:11.421, ic:mkIcon(CP,'🌆',32),
+    opts:{
+      badge:'T9–10 · Ingolstadt', bcolor:CP,
+      title:'Ingolstadt — Hallenbad-Stellplatz',
+      day:'Tag 9–10 · Kurzfahrt ~40 km',
+      tourLine:'⚡ Donau-Radweg + Altmühltal-Runde Essing/Riedenburg<br><span>~45 km (T9) + ~70 km (T10) · Burg Prunn, 3 Burgen</span>',
+      spLine:'📍 ⭐ Hallenbad-Stellplatz · 6 €/Nacht · Strom gratis!',
+      // Wohnmobilstellplatz am Hallenbad Ingolstadt (Jahnstraße)
+      parkLat:48.7609, parkLng:11.4203, parkLabel:'Wohnmobilstellplatz Hallenbad Ingolstadt Jahnstraße',
+      // Ingolstadt Kreuztor / Altstadt (Ausgangspunkt E-Bike)
+      tourLat:48.7627, tourLng:11.4261, tourLabel:'Ingolstadt Kreuztor Altstadt E-Bike-Start'
+    }
+  },
+];
+
+stops.forEach(s => {
+  const html = pop(s.opts);
+  L.marker([s.lat, s.lng], {icon:s.ic})
+    .bindPopup(html, {maxWidth:290, minWidth:270})
+    .addTo(map);
+});
+
+map.fitBounds(L.latLngBounds(routeCoords).pad(0.09));
+</script>
 
 </body>
 </html>
